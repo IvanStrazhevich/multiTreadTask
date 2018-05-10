@@ -1,0 +1,10 @@
+ <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="AppTests" verbose="1" >
+
+<test name="AllTestsAtOnce" >
+    <packages>
+        <package name="by.epam.*"/>
+    </packages>
+</test>
+</suite>
