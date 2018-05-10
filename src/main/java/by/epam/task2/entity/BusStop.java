@@ -8,7 +8,6 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class BusStop {
@@ -23,14 +22,26 @@ public class BusStop {
 
     public void arriveOnBusStop(Bus bus) {
         try {
-            while (!lock.tryLock()){
-                TimeUnit.MILLISECONDS.sleep(50);
+            while (!lock.tryLock()) {
+                TimeUnit.MILLISECONDS.sleep(1);
             }
-                busesQueue.add(bus);
-                logger.info("bus number " + bus.getBusRoute().getRouteNumber() + " " + bus.getName() + " is on busstop " + this.getName());
-                TimeUnit.MILLISECONDS.sleep(new Random().nextInt(1000));
-                logger.info("bus number " + bus.getBusRoute().getRouteNumber() + " " + bus.getName() + " is leaving busstop " + this.getName() + " " + bus.getName());
-                busesQueue.poll();
+            busesQueue.add(bus);
+            logger.info("bus number " + bus.getBusRoute().getRouteNumber() + " " + bus.getName() + " is on busstop " + this.getName());
+            TimeUnit.MILLISECONDS.sleep(new Random().nextInt(500));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }
+    public void leaveFromBusStop(Bus bus) {
+        try {
+            while (!lock.tryLock()) {
+                TimeUnit.MILLISECONDS.sleep(1);
+            }
+            logger.info("buses on stop " +" "+ this.getName()+" "+ busesQueue.size());
+            logger.info("bus number " + bus.getBusRoute().getRouteNumber() + " " + bus.getName() + " is leaving busstop " + this.getName() + " " + bus.getName());
+            busesQueue.poll();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {

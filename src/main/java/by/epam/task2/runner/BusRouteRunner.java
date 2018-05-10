@@ -18,7 +18,7 @@ public class BusRouteRunner {
             busRoute.getBusStops().add(new BusStop("Three " + i));
             busRoute.getBusStops().add(new BusStop("Four " + i));
 
-            for (int j = 0; j < 3; j++) {
+            for (int j = 0; j < 30; j++) {
                 new Bus(busRoute).start();
             }
         }

@@ -16,26 +16,22 @@ public class BusRoute {
     private static Logger logger = LogManager.getLogger();
     private int routeNumber;
     private Queue<BusStop> busStops = new ArrayDeque<>();
-    private ReentrantLock lock = new ReentrantLock();
 
     public void moveOnRoute(Bus bus) {
         for (BusStop busStop : busStops) {
 
+            logger.info("bus number " + bus.getBusRoute().getRouteNumber() + " "
+                    + bus.getName() + " is moving to bus stop " + busStop.getName());
             try {
-                while (!lock.tryLock()){
-                    TimeUnit.MILLISECONDS.sleep(50);
-                }
-                    logger.info("bus number " + bus.getBusRoute().getRouteNumber() + " "
-                            + bus.getName() + " is moving to bus stop " + busStop.getName());
-                    TimeUnit.MILLISECONDS.sleep(new Random().nextInt(500));
-                    logger.info("bus number " + bus.getBusRoute().getRouteNumber() + " "
-                            + bus.getName() + " is arriving to stop " + busStop.getName());
-                    busStop.arriveOnBusStop(bus);
+                TimeUnit.MILLISECONDS.sleep(10);
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            } finally {
-                lock.unlock();
             }
+            logger.info("bus number " + bus.getBusRoute().getRouteNumber() + " "
+                    + bus.getName() + " is arriving to stop " + busStop.getName());
+            busStop.arriveOnBusStop(bus);
+            busStop.leaveFromBusStop(bus);
+
         }
     }
 
