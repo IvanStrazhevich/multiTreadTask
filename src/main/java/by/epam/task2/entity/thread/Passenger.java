@@ -6,9 +6,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 public class Passenger extends Thread {
     private static Logger logger = LogManager.getLogger();
+    private static final int APROX_RIDING_TIME = 10000;
     private BusRoute busRouteNeeded;
     private BusStop boardFrom;
     private BusStop takeOff;
@@ -57,6 +59,14 @@ public class Passenger extends Thread {
         logger.info("passenger " + this.getName()
                 + " is on stop " + this.getBoardFrom().getName()
                 + " goes to " + this.getTakeOff().getName());
+        while (onRide) {
+            try {
+                TimeUnit.MILLISECONDS.sleep(APROX_RIDING_TIME);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            logger.info("is on destination point " + this.getName());
+        }
     }
 
     public BusRoute getBusRouteNeeded() {
@@ -91,7 +101,6 @@ public class Passenger extends Thread {
         this.onRide = onRide;
     }
 
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -102,15 +111,15 @@ public class Passenger extends Thread {
         if (onRide != passenger.onRide) return false;
         if (busRouteNeeded != null ? !busRouteNeeded.equals(passenger.busRouteNeeded) : passenger.busRouteNeeded != null)
             return false;
-        if (takeOff != null ? !takeOff.equals(passenger.takeOff) : passenger.takeOff != null) return false;
-        return boardFrom != null ? boardFrom.equals(passenger.boardFrom) : passenger.boardFrom == null;
+        if (boardFrom != null ? !boardFrom.equals(passenger.boardFrom) : passenger.boardFrom != null) return false;
+        return takeOff != null ? takeOff.equals(passenger.takeOff) : passenger.takeOff == null;
     }
 
     @Override
     public int hashCode() {
         int result = busRouteNeeded != null ? busRouteNeeded.hashCode() : 0;
-        result = 31 * result + (takeOff != null ? takeOff.hashCode() : 0);
         result = 31 * result + (boardFrom != null ? boardFrom.hashCode() : 0);
+        result = 31 * result + (takeOff != null ? takeOff.hashCode() : 0);
         result = 31 * result + (onRide ? 1 : 0);
         return result;
     }

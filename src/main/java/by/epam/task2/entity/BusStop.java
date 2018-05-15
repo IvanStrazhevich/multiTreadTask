@@ -14,17 +14,21 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class BusStop {
     private static final int BUS_STOP_BUS_CAPACITY = 2;
-    private static final int BUS_STOP_PASSENGER_CAPACITY = 2;
-    private static final int MAX_TIME_ON_STOP = 500;
+    private static final int BUS_STOP_PASSENGER_CAPACITY = 20;
+    private static final int MAX_TIME_ON_STOP = 1000;
     private static final int WAITING_TIME_BEFORE_STOP = 5;
+    private static final ReentrantLock lock = new ReentrantLock();
     private static Logger logger = LogManager.getLogger();
     private Random random = new Random();
     private String name;
     private int busStopOrderedId;
     private ArrayDeque<Bus> busesQueue = new ArrayDeque<>(BUS_STOP_BUS_CAPACITY);
-    private ReentrantLock lock = new ReentrantLock();
     private Condition busStopIsFull = lock.newCondition();
+    private Condition passengerCanTakingOff = lock.newCondition();
+    private Condition passengerCanBoarding = lock.newCondition();
     private ArrayDeque<Passenger> passengersOnBusStop = new ArrayDeque<>(BUS_STOP_PASSENGER_CAPACITY);
+    private boolean takeOf;
+    private boolean boarding;
 
     public BusStop(String name) {
         this.name = name;
@@ -36,34 +40,46 @@ public class BusStop {
     }
 
     public void passengersBoarding() {
+        lock.lock();
         Bus bus = busesQueue.peek();
         try {
-            lock.lock();
             for (Passenger passenger : passengersOnBusStop
                     ) {
+                while (takeOf) {
+                    passengerCanBoarding.await();
+                }
+                boarding = true;
                 if (passenger.getBusRouteNeeded().equals(bus.getBusRoute())
                         && !passenger.getTakeOff().equals(this)
-                        && passenger.isOnRide()
-                        && new Random().nextBoolean()) {
+                        && passenger.isOnRide()) {
                     passengersOnBusStop.remove(passenger);
                     bus.boardOnBus(passenger);
                     logger.info("passenger " + passenger.getName()
                             + " is boarded on bus " + bus.getName()
                             + " destination is " + passenger.getTakeOff().getName());
                 }
+                boarding = false;
+                passengerCanTakingOff.signal();
             }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         } finally {
             lock.unlock();
         }
     }
 
     public void passengersTakeOff() {
+        lock.lock();
         Bus bus = busesQueue.peek();
         try {
-            lock.lock();
+
             for (Passenger passenger : bus.getPassengerArrayDeque()) {
-                if (passenger.getTakeOff().equals(this)
-                        && random.nextBoolean()) {
+                while (boarding) {
+                    passengerCanTakingOff.await();
+                }
+                takeOf = true;
+                passengerCanTakingOff.signal();
+                if (passenger.getTakeOff() == (this)) {
                     bus.takeOffBus(passenger);
                     passengersOnBusStop.add(passenger);
                     passenger.setOnRide(false);
@@ -76,14 +92,19 @@ public class BusStop {
                     logger.info("passenger " + passenger.getName()
                             + " on ride is " + passenger.isOnRide() + " take of on mid stop");
                     passenger.setBoardFrom(this);
-                } else if (this.equals(bus.getBusRoute().getBusStops().getLast())) {
+                } else if (this == (bus.getBusRoute().getBusStops().getLast())) {
                     bus.takeOffBus(passenger);
                     passengersOnBusStop.add(passenger);
                     logger.info("passenger " + passenger.getName() + " take of on last stop");
                     passenger.setOnRide(false);
                     passenger.setBoardFrom(this);
                 }
+                takeOf = false;
+                passengerCanBoarding.signal();
             }
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         } finally {
             lock.unlock();
         }
@@ -93,7 +114,7 @@ public class BusStop {
         try {
             lock.lock();
             while (!(busesQueue.size() < BUS_STOP_BUS_CAPACITY)) {
-                busStopIsFull.await(WAITING_TIME_BEFORE_STOP,TimeUnit.MILLISECONDS);
+                busStopIsFull.await(WAITING_TIME_BEFORE_STOP, TimeUnit.MILLISECONDS);
             }
             busStopIsFull.signal();
             busesQueue.add(bus);
@@ -156,10 +177,6 @@ public class BusStop {
 
     public ReentrantLock getLock() {
         return lock;
-    }
-
-    public void setLock(ReentrantLock lock) {
-        this.lock = lock;
     }
 
     @Override

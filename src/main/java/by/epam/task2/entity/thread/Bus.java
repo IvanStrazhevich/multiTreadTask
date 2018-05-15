@@ -52,6 +52,35 @@ public class Bus extends Thread {
     public void setBusRoute(BusRoute busRoute) {
         this.busRoute = busRoute;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Bus bus = (Bus) o;
+
+        if (busOnStop != bus.busOnStop) return false;
+        if (busRoute != null ? !busRoute.equals(bus.busRoute) : bus.busRoute != null) return false;
+        return passengerList != null ? passengerList.equals(bus.passengerList) : bus.passengerList == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = busRoute != null ? busRoute.hashCode() : 0;
+        result = 31 * result + (passengerList != null ? passengerList.hashCode() : 0);
+        result = 31 * result + (busOnStop ? 1 : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Bus{" +
+                "busRoute=" + busRoute +
+                ", passengerList=" + passengerList +
+                ", busOnStop=" + busOnStop +
+                '}';
+    }
 }
 
 
