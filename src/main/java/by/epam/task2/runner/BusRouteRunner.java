@@ -3,6 +3,7 @@ package by.epam.task2.runner;
 import by.epam.task2.entity.thread.Bus;
 import by.epam.task2.entity.BusRoute;
 import by.epam.task2.entity.BusStop;
+import by.epam.task2.entity.thread.Passenger;
 
 import java.util.ArrayDeque;
 
@@ -13,16 +14,22 @@ public class BusRouteRunner {
             BusRoute busRoute = new BusRoute();
             busRoute.setRouteNumber(i);
             busRoute.setBusStops(new ArrayDeque<>());
-            busRoute.getBusStops().add(new BusStop("One " + i));
-            busRoute.getBusStops().add(new BusStop("Two " + i));
-            busRoute.getBusStops().add(new BusStop("Three " + i));
-            busRoute.getBusStops().add(new BusStop("Four " + i));
+            int j=0;
+            busRoute.getBusStops().add(new BusStop("One ", ++j));
+            busRoute.getBusStops().add(new BusStop("Two ", ++j));
+            busRoute.getBusStops().add(new BusStop("Three ",++j));
+            busRoute.getBusStops().add(new BusStop("Four ", ++j));
 
-            for (int j = 0; j < 30; j++) {
+            for (int k = 0; k < 10; k++) {
+                Passenger passenger = new Passenger(busRoute);
+                passenger.distributeStopsToPassengers();
+                passenger.start();
+            }
+
+            for (j = 0; j < 10; j++) {
                 new Bus(busRoute).start();
             }
         }
-
     }
 }
 
