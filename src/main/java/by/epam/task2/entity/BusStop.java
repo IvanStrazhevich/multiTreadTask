@@ -136,7 +136,6 @@ public class BusStop {
                     + " " + bus.getName() + " is leaving bus stop " + this.getName() + " " + bus.getName());
             logger.info("buses on stop before bus leaving " + " " + this.toString() + " " + busesQueue.size());
             busesQueue.poll();
-            logger.info("buses on stop after bus leaving " + " " + this.toString() + " " + busesQueue.size());
             bus.setBusOnStop(false);
         } finally {
             lock.unlock();

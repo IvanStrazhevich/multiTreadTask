@@ -9,34 +9,28 @@ import java.util.ArrayDeque;
 
 public class BusRouteRunner {
     public static void main(String[] args) {
-        try {
-            for (int i = 0; i < 1; i++) {
-                BusRoute busRoute = new BusRoute();
-                busRoute.setRouteNumber(i);
-                busRoute.setBusStops(new ArrayDeque<>());
-                int j = 0;
-                busRoute.getBusStops().add(new BusStop("One ", ++j));
-                busRoute.getBusStops().add(new BusStop("Two ", ++j));
-                busRoute.getBusStops().add(new BusStop("Three ", ++j));
-                busRoute.getBusStops().add(new BusStop("Four ", ++j));
+        for (int i = 0; i < 1; i++) {
+            BusRoute busRoute = new BusRoute();
+            busRoute.setRouteNumber(i);
+            busRoute.setBusStops(new ArrayDeque<>());
+            int j = 0;
+            busRoute.getBusStops().add(new BusStop("One ", ++j));
+            busRoute.getBusStops().add(new BusStop("Two ", ++j));
+            busRoute.getBusStops().add(new BusStop("Three ", ++j));
+            busRoute.getBusStops().add(new BusStop("Four ", ++j));
 
-                for (int k = 0; k < 10; k++) {
-                    Passenger passenger = new Passenger(busRoute);
-                    passenger.distributeStopsToPassengers();
-                    passenger.start();
-                }
-
-                for (j = 0; j < 5; j++) {
-                    new Bus(busRoute).start();
-                }
+            for (int k = 0; k < 10; k++) {
+                Passenger passenger = new Passenger(busRoute);
+                passenger.distributeStopsToPassengers();
+                passenger.start();
             }
-        } finally {
 
-            while (!Thread.currentThread().isInterrupted()) {
-                Thread.currentThread().interrupt();
+            for (j = 0; j < 5; j++) {
+                new Bus(busRoute).start();
             }
         }
     }
 }
+
 
 

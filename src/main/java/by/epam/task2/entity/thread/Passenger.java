@@ -16,7 +16,6 @@ public class Passenger extends Thread {
     private BusStop takeOff;
     private boolean onRide;
 
-
     public Passenger(BusRoute busRouteNeeded) {
         this.busRouteNeeded = busRouteNeeded;
     }
