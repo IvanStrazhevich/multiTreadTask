@@ -1,7 +1,5 @@
 package by.epam.task2.entity;
 
-import by.epam.task2.entity.thread.Bus;
-import by.epam.task2.entity.thread.Passenger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,7 +15,7 @@ public class BusStop {
     private static final int BUS_STOP_PASSENGER_CAPACITY = 20;
     private static final int MAX_TIME_ON_STOP = 1000;
     private static final int WAITING_TIME_BEFORE_STOP = 5;
-    private static final ReentrantLock lock = new ReentrantLock();
+    private final ReentrantLock lock = new ReentrantLock();
     private static Logger logger = LogManager.getLogger();
     private Random random = new Random();
     private String name;
@@ -57,6 +55,14 @@ public class BusStop {
                     logger.info("passenger " + passenger.getName()
                             + " is boarded on bus " + bus.getName()
                             + " destination is " + passenger.getTakeOff().getName());
+                } else if (random.nextBoolean()
+                        && passenger.isOnRide()
+                        && passenger.getBusRouteNeeded().equals(bus.getBusRoute())) {
+                    passengersOnBusStop.remove(passenger);
+                    bus.boardOnBus(passenger);
+                    logger.info("passenger " + passenger.getName()
+                            + " is boarded on bus " + bus.getName()
+                            + " destination is " + passenger.getTakeOff().getName());
                 }
                 boarding = false;
                 passengerCanTakingOff.signal();
@@ -71,14 +77,15 @@ public class BusStop {
     public void passengersTakeOff() {
         lock.lock();
         Bus bus = busesQueue.peek();
+        ArrayDeque<Passenger> passengersOnBus = bus.getPassengerArrayDeque();
         try {
-
-            for (Passenger passenger : bus.getPassengerArrayDeque()) {
+            for (Passenger passenger : passengersOnBus) {
                 while (boarding) {
                     passengerCanTakingOff.await();
                 }
                 takeOf = true;
                 passengerCanTakingOff.signal();
+                // if destination bus stop
                 if (passenger.getTakeOff() == (this)) {
                     bus.takeOffBus(passenger);
                     passengersOnBusStop.add(passenger);
@@ -86,13 +93,15 @@ public class BusStop {
                     logger.info("passenger " + passenger.getName()
                             + " on ride is " + passenger.isOnRide() + " is arrived to destination");
                     passengersOnBusStop.remove(passenger);
+                    // if passenger can decide to take of
                 } else if (random.nextBoolean()) {
                     bus.takeOffBus(passenger);
                     passengersOnBusStop.add(passenger);
                     logger.info("passenger " + passenger.getName()
                             + " on ride is " + passenger.isOnRide() + " take of on mid stop");
                     passenger.setBoardFrom(this);
-                } else if (this == (bus.getBusRoute().getBusStops().getLast())) {
+                    // if last stop on route
+                } else if (this.equals(bus.getBusRoute().getBusStops().getLast())) {
                     bus.takeOffBus(passenger);
                     passengersOnBusStop.add(passenger);
                     logger.info("passenger " + passenger.getName() + " take of on last stop");
@@ -102,7 +111,6 @@ public class BusStop {
                 takeOf = false;
                 passengerCanBoarding.signal();
             }
-
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
@@ -178,6 +186,22 @@ public class BusStop {
         return lock;
     }
 
+    public boolean isTakeOf() {
+        return takeOf;
+    }
+
+    public void setTakeOf(boolean takeOf) {
+        this.takeOf = takeOf;
+    }
+
+    public boolean isBoarding() {
+        return boarding;
+    }
+
+    public void setBoarding(boolean boarding) {
+        this.boarding = boarding;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -186,19 +210,34 @@ public class BusStop {
         BusStop busStop = (BusStop) o;
 
         if (busStopOrderedId != busStop.busStopOrderedId) return false;
+        if (takeOf != busStop.takeOf) return false;
+        if (boarding != busStop.boarding) return false;
+        if (lock != null ? !lock.equals(busStop.lock) : busStop.lock != null) return false;
+        if (random != null ? !random.equals(busStop.random) : busStop.random != null) return false;
         if (name != null ? !name.equals(busStop.name) : busStop.name != null) return false;
         if (busesQueue != null ? !busesQueue.equals(busStop.busesQueue) : busStop.busesQueue != null) return false;
-        if (lock != null ? !lock.equals(busStop.lock) : busStop.lock != null) return false;
+        if (busStopIsFull != null ? !busStopIsFull.equals(busStop.busStopIsFull) : busStop.busStopIsFull != null)
+            return false;
+        if (passengerCanTakingOff != null ? !passengerCanTakingOff.equals(busStop.passengerCanTakingOff) : busStop.passengerCanTakingOff != null)
+            return false;
+        if (passengerCanBoarding != null ? !passengerCanBoarding.equals(busStop.passengerCanBoarding) : busStop.passengerCanBoarding != null)
+            return false;
         return passengersOnBusStop != null ? passengersOnBusStop.equals(busStop.passengersOnBusStop) : busStop.passengersOnBusStop == null;
     }
 
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
+        int result = lock != null ? lock.hashCode() : 0;
+        result = 31 * result + (random != null ? random.hashCode() : 0);
+        result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + busStopOrderedId;
         result = 31 * result + (busesQueue != null ? busesQueue.hashCode() : 0);
-        result = 31 * result + (lock != null ? lock.hashCode() : 0);
+        result = 31 * result + (busStopIsFull != null ? busStopIsFull.hashCode() : 0);
+        result = 31 * result + (passengerCanTakingOff != null ? passengerCanTakingOff.hashCode() : 0);
+        result = 31 * result + (passengerCanBoarding != null ? passengerCanBoarding.hashCode() : 0);
         result = 31 * result + (passengersOnBusStop != null ? passengersOnBusStop.hashCode() : 0);
+        result = 31 * result + (takeOf ? 1 : 0);
+        result = 31 * result + (boarding ? 1 : 0);
         return result;
     }
 

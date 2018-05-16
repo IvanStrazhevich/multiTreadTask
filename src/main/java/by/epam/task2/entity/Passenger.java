@@ -1,7 +1,5 @@
-package by.epam.task2.entity.thread;
+package by.epam.task2.entity;
 
-import by.epam.task2.entity.BusRoute;
-import by.epam.task2.entity.BusStop;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
