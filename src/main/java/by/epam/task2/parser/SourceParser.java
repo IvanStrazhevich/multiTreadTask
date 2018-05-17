@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SourceParser<T> implements SourceParsable<ArrayList<String>> {
-    static Logger logger = LogManager.getLogger();
+    private static Logger logger = LogManager.getLogger();
     private static final String ROUTE_PATTERN = "(\\d+\\.)\\s((\\w+\\s?)+?(\\.\\s)?)+";
 
 

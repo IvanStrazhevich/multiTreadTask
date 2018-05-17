@@ -18,18 +18,16 @@ public class RouteBuilder implements RouteBuildable {
     private static final String NUMBER = "\\d+?";
     private static Logger logger = LogManager.getLogger();
     private BusStopBuildable busStopBuilder;
-    private SourceParsable sourceParser;
 
-    private RouteBuilder(BusStopBuildable busStopBuilder, SourceParsable sourceParser) {
+    private RouteBuilder(BusStopBuildable busStopBuilder) {
         this.busStopBuilder = busStopBuilder;
-        this.sourceParser = sourceParser;
     }
 
     private static RouteBuilder instance;
 
     public static RouteBuilder getInstance() {
         if (null == instance) {
-            instance = new RouteBuilder(BusStopBuilder.getInstance(), new SourceParser());
+            instance = new RouteBuilder(BusStopBuilder.getInstance());
         }
         return instance;
     }
@@ -66,9 +64,5 @@ public class RouteBuilder implements RouteBuildable {
 
     public void setBusStopBuildable(BusStopBuildable busStopBuilder) {
         this.busStopBuilder = busStopBuilder;
-    }
-
-    public void setSourceParser(SourceParsable sourceParser) {
-        this.sourceParser = sourceParser;
     }
 }

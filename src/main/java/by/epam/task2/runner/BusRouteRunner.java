@@ -10,7 +10,7 @@ import java.util.ArrayList;
 public class BusRouteRunner {
     public static void main(String[] args) {
         BusRoutesCreator busRoutesCreator = new BusRoutesCreator();
-        ArrayList<BusRoute> routes = busRoutesCreator.serviseRoutes();
+        ArrayList<BusRoute> routes = busRoutesCreator.serviceRoutes();
         BusLauncher busLauncher = BusLauncher.getInstance(routes);
         PassengerLauncher passengerLauncher = PassengerLauncher.getInstance(routes);
         passengerLauncher.launchPassengers();

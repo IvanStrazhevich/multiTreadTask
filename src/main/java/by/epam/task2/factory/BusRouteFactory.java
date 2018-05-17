@@ -8,13 +8,13 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 
-public class BusRouteFactory<T> implements RouteFactory<BusRoute> {
+public class BusRouteFactory<T> implements RouteFactory<ArrayList<BusRoute>> {
     private static Logger logger = LogManager.getLogger();
     private static BusRouteFactory<BusRoute> instance;
 
-    public static BusRouteFactory<BusRoute> getInstance() {
+    public static final BusRouteFactory<BusRoute> getInstance() {
         if (null == instance) {
-            instance = new BusRouteFactory<>();
+            instance = new BusRouteFactory<BusRoute>();
         }
         return instance;
     }

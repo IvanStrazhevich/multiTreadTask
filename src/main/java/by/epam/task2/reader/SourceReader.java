@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class SourceReader<T> implements SourceReadable<ArrayList<String>> {
-    static Logger logger = LogManager.getLogger();
+    private static Logger logger = LogManager.getLogger();
 
     public ArrayList<String> readSource(String dataSource) throws ExtendedException {
         ArrayList<String> routeDataList = new ArrayList<>();

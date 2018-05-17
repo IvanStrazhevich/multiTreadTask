@@ -7,9 +7,10 @@ import java.util.ArrayList;
 
 
 public class PassengerLauncher {
-    private static final PassengerLauncher instance = new PassengerLauncher(new ArrayList<BusRoute>());
-    private ArrayList<BusRoute> routes;
+    private static final PassengerLauncher instance = new PassengerLauncher(new ArrayList<>());
     private static final int NUMBER_OF_PASSENGER = 50;
+    private ArrayList<BusRoute> routes;
+
 
     private PassengerLauncher(ArrayList<BusRoute> routes) {
         this.routes = routes;
