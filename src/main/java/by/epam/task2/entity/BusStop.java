@@ -4,10 +4,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Queue;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -106,9 +103,17 @@ public class BusStop {
                 }
             }
             passengersOnBusStop.removeAll(toAddOnBus);
-            if (bus.getPassengerArrayDeque().size() + toAddOnBus.size() >= Bus.getBusCapacity()) {
-                logger.log(Level.INFO, (bus.getPassengerArrayDeque().size() + toAddOnBus.size()) + "if overloaded");
+            int busCanTake = Bus.getBusCapacity() - bus.getPassengerArrayDeque().size();
+            int passengersToAddOnBus = toAddOnBus.size();
+            if (busCanTake < passengersToAddOnBus) {
+                logger.log(Level.INFO, (passengersToAddOnBus - busCanTake) + " bus is overloaded with");
                 bus.setBusIsFull(true);
+                List<Passenger> trimmedToAddOnBus = toAddOnBus.subList(0, busCanTake - 1);
+                logger.log(Level.INFO, trimmedToAddOnBus.size());
+                List<Passenger> backToStop = toAddOnBus.subList(busCanTake, passengersToAddOnBus);
+                logger.log(Level.INFO, backToStop.size());
+                bus.boardOnBus(trimmedToAddOnBus);
+                passengersOnBusStop.addAll(backToStop);
             } else {
                 bus.boardOnBus(toAddOnBus);
             }

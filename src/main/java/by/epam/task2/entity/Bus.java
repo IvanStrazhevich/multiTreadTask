@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -13,7 +14,7 @@ public class Bus extends Thread {
     private static Logger logger = LogManager.getLogger();
     private static final int BUS_CAPACITY = 20;
     private BusRoute busRoute;
-    private ArrayDeque<Passenger> passengerList = new ArrayDeque<>(20);
+    private ArrayDeque<Passenger> passengerList = new ArrayDeque<>(BUS_CAPACITY);
     private final ReentrantLock lock = new ReentrantLock();
     private Condition passengerCanTakingOff = lock.newCondition();
     private Condition passengerCanBoarding = lock.newCondition();
@@ -31,7 +32,7 @@ public class Bus extends Thread {
         busRoute.moveOnRoute(Bus.this);
     }
 
-    public void boardOnBus(ArrayList<Passenger> passengers) {
+    public void boardOnBus(List<Passenger> passengers) {
         lock.lock();
         try {
             while (takeOf) {

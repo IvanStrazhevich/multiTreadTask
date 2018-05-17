@@ -1,4 +1,4 @@
-package by.epam.task2.runner;
+package by.epam.task2.service;
 
 import by.epam.task2.entity.Bus;
 import by.epam.task2.entity.BusRoute;

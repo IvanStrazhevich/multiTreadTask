@@ -1,4 +1,4 @@
-package by.epam.task2.runner;
+package by.epam.task2.service;
 
 import by.epam.task2.entity.BusRoute;
 import by.epam.task2.entity.Passenger;
@@ -9,7 +9,7 @@ import java.util.ArrayList;
 public class PassengerLauncher {
     private static final PassengerLauncher instance = new PassengerLauncher(new ArrayList<BusRoute>());
     private ArrayList<BusRoute> routes;
-    private static final int NUMBER_OF_PASSENGER = 20;
+    private static final int NUMBER_OF_PASSENGER = 50;
 
     private PassengerLauncher(ArrayList<BusRoute> routes) {
         this.routes = routes;
