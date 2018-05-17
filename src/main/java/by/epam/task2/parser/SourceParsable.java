@@ -6,7 +6,5 @@ public interface SourceParsable<T> {
 
     ArrayList<String> createRouteDataListFromList(T routeDataList);
 
-    ArrayList<String> createRouteDataListFromString(String routeDataList);
-
 }
 

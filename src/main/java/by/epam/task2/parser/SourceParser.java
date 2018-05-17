@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 public class SourceParser<T> implements SourceParsable<ArrayList<String>> {
     static Logger logger = LogManager.getLogger();
-    private static final String ROUTE_PATTERN = "\\d+\\,(\\s)((\\w\\s+?)+?(\\,\\s+)?)+?";
+    private static final String ROUTE_PATTERN = "(\\d+\\.)\\s((\\w+\\s?)+?(\\.\\s)?)+";
 
 
     @Override
@@ -24,20 +24,8 @@ public class SourceParser<T> implements SourceParsable<ArrayList<String>> {
                 routeList.add(route);
             }
         }
-        logger.debug(routeList + " Parser to route description result");
+        logger.info(routeList + " Parser to route description result");
         return routeList;
     }
-
-    @Override
-    public ArrayList<String> createRouteDataListFromString(String routeData) {
-        ArrayList<String> RouteList = new ArrayList<>();
-        Pattern pattern = Pattern.compile(ROUTE_PATTERN);
-        Matcher matcher = pattern.matcher(routeData);
-        while (matcher.find()) {
-            String route = matcher.group();
-            RouteList.add(route);
-        }
-        logger.debug(RouteList + " Parser to route description result");
-        return RouteList;
-    }
 }
+

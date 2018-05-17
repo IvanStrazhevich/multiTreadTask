@@ -1,9 +1,11 @@
 package by.epam.task2.entity;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -11,62 +13,65 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class BusStop {
-    private static final int BUS_STOP_BUS_CAPACITY = 2;
-    private static final int BUS_STOP_PASSENGER_CAPACITY = 20;
-    private static final int MAX_TIME_ON_STOP = 1000;
+    private static final int BUS_STOP_BUS_CAPACITY = 3;
+    private static final int BUS_STOP_PASSENGER_CAPACITY = 100;
+    private static final int MAX_TIME_ON_STOP = 500;
     private static final int WAITING_TIME_BEFORE_STOP = 5;
     private final ReentrantLock lock = new ReentrantLock();
     private static Logger logger = LogManager.getLogger();
+    private Condition busStopIsFull = lock.newCondition();
     private Random random = new Random();
     private String name;
     private int busStopOrderedId;
     private ArrayDeque<Bus> busesQueue = new ArrayDeque<>(BUS_STOP_BUS_CAPACITY);
-    private Condition busStopIsFull = lock.newCondition();
+    private ArrayDeque<Passenger> passengersOnBusStop = new ArrayDeque<>(BUS_STOP_PASSENGER_CAPACITY);
     private Condition passengerCanTakingOff = lock.newCondition();
     private Condition passengerCanBoarding = lock.newCondition();
-    private ArrayDeque<Passenger> passengersOnBusStop = new ArrayDeque<>(BUS_STOP_PASSENGER_CAPACITY);
     private boolean takeOf;
     private boolean boarding;
-
-    public BusStop(String name) {
-        this.name = name;
-    }
 
     public BusStop(String name, int busStopOrderedId) {
         this.name = name;
         this.busStopOrderedId = busStopOrderedId;
     }
 
-    public void passengersBoarding() {
+    public void passengersTakeOff() {
         lock.lock();
         Bus bus = busesQueue.peek();
+        ArrayDeque<Passenger> passengersOnBus = bus.getPassengerArrayDeque();
+        ArrayList<Passenger> toAddOnStop = new ArrayList<>();
+        ArrayList<Passenger> toRemoveFromBus = new ArrayList<>();
         try {
-            for (Passenger passenger : passengersOnBusStop
-                    ) {
-                while (takeOf) {
-                    passengerCanBoarding.await();
-                }
-                boarding = true;
-                if (passenger.getBusRouteNeeded().equals(bus.getBusRoute())
-                        && !passenger.getTakeOff().equals(this)
-                        && passenger.isOnRide()) {
-                    passengersOnBusStop.remove(passenger);
-                    bus.boardOnBus(passenger);
-                    logger.info("passenger " + passenger.getName()
-                            + " is boarded on bus " + bus.getName()
-                            + " destination is " + passenger.getTakeOff().getName());
-                } else if (random.nextBoolean()
-                        && passenger.isOnRide()
-                        && passenger.getBusRouteNeeded().equals(bus.getBusRoute())) {
-                    passengersOnBusStop.remove(passenger);
-                    bus.boardOnBus(passenger);
-                    logger.info("passenger " + passenger.getName()
-                            + " is boarded on bus " + bus.getName()
-                            + " destination is " + passenger.getTakeOff().getName());
-                }
-                boarding = false;
-                passengerCanTakingOff.signal();
+            while (boarding) {
+                passengerCanTakingOff.await();
             }
+            for (Passenger passenger : passengersOnBus) {
+                // if destination bus stop
+                if (passenger.getTakeOff().equals(this)) {
+                    toRemoveFromBus.add(passenger);
+                    passenger.setOnRide(false);
+                    toAddOnStop.add(passenger);
+                    logger.info("passenger " + passenger.getName()
+                            + " on ride is " + passenger.isOnRide() + " is arrived to destination");
+                    // if passenger can decide to take of
+                } else if (random.nextBoolean()) {
+                    toRemoveFromBus.add(passenger);
+                    toAddOnStop.add(passenger);
+                    logger.info("passenger " + passenger.getName()
+                            + " on ride is " + passenger.isOnRide() + " take of on mid stop");
+                    // if last stop on route
+                } else if (this.equals(bus.getBusRoute().getBusStops().getLast())) {
+                    toRemoveFromBus.add(passenger);
+                    passenger.setOnRide(false);
+                    toAddOnStop.add(passenger);
+                    logger.info("passenger " + passenger.getName()
+                            + " on ride is " + passenger.isOnRide() + " take of on last stop");
+                }
+            }
+            bus.takeOffBus(toRemoveFromBus);
+            passengersOnBusStop.addAll(toAddOnStop);
+            takeOf = false;
+            passengerCanBoarding.signal();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
@@ -74,49 +79,48 @@ public class BusStop {
         }
     }
 
-    public void passengersTakeOff() {
+    public void passengersBoarding() {
         lock.lock();
         Bus bus = busesQueue.peek();
-        ArrayDeque<Passenger> passengersOnBus = bus.getPassengerArrayDeque();
+        ArrayList<Passenger> toAddOnBus = new ArrayList<>();
         try {
-            for (Passenger passenger : passengersOnBus) {
-                while (boarding) {
-                    passengerCanTakingOff.await();
-                }
-                takeOf = true;
-                passengerCanTakingOff.signal();
-                // if destination bus stop
-                if (passenger.getTakeOff() == (this)) {
-                    bus.takeOffBus(passenger);
-                    passengersOnBusStop.add(passenger);
-                    passenger.setOnRide(false);
-                    logger.info("passenger " + passenger.getName()
-                            + " on ride is " + passenger.isOnRide() + " is arrived to destination");
-                    passengersOnBusStop.remove(passenger);
-                    // if passenger can decide to take of
-                } else if (random.nextBoolean()) {
-                    bus.takeOffBus(passenger);
-                    passengersOnBusStop.add(passenger);
-                    logger.info("passenger " + passenger.getName()
-                            + " on ride is " + passenger.isOnRide() + " take of on mid stop");
-                    passenger.setBoardFrom(this);
-                    // if last stop on route
-                } else if (this.equals(bus.getBusRoute().getBusStops().getLast())) {
-                    bus.takeOffBus(passenger);
-                    passengersOnBusStop.add(passenger);
-                    logger.info("passenger " + passenger.getName() + " take of on last stop");
-                    passenger.setOnRide(false);
-                    passenger.setBoardFrom(this);
-                }
-                takeOf = false;
-                passengerCanBoarding.signal();
+            while (takeOf) {
+                passengerCanBoarding.await();
             }
+            for (Passenger passenger : passengersOnBusStop
+                    ) {
+                if (passenger.getBusRouteNeeded().equals(bus.getBusRoute())
+                        && !passenger.getTakeOff().equals(this)
+                        && passenger.isOnRide()) {
+                    toAddOnBus.add(passenger);
+                    logger.info("passenger " + passenger.getName()
+                            + " boarding on " + bus.getBusRoute().getRouteNumber() + " " + bus.getName()
+                            + " destination " + passenger.getTakeOff().getName());
+                } else if (random.nextBoolean()
+                        && passenger.isOnRide()
+                        && passenger.getBusRouteNeeded().equals(bus.getBusRoute())) {
+                    toAddOnBus.add(passenger);
+                    logger.info("passenger " + passenger.getName()
+                            + " boarding on " + bus.getBusRoute().getRouteNumber() + " " + bus.getName()
+                            + " destination " + passenger.getTakeOff().getName());
+                }
+            }
+            passengersOnBusStop.removeAll(toAddOnBus);
+            if (bus.getPassengerArrayDeque().size() + toAddOnBus.size() >= Bus.getBusCapacity()) {
+                logger.log(Level.INFO, (bus.getPassengerArrayDeque().size() + toAddOnBus.size()) + "if overloaded");
+                bus.setBusIsFull(true);
+            } else {
+                bus.boardOnBus(toAddOnBus);
+            }
+            boarding = false;
+            passengerCanTakingOff.signal();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
             lock.unlock();
         }
     }
+
 
     public void arriveOnBusStop(Bus bus) {
         try {
@@ -129,11 +133,15 @@ public class BusStop {
             bus.setBusOnStop(true);
             logger.info("bus number " + bus.getBusRoute().getRouteNumber()
                     + " " + bus.getName() + " is on bus stop " + bus.isBusOnStop() + " " + this.getName());
-            TimeUnit.MILLISECONDS.sleep(random.nextInt(MAX_TIME_ON_STOP));
         } catch (InterruptedException e) {
             logger.error("Arrive on BusStop problem", e);
         } finally {
             lock.unlock();
+        }
+        try {
+            TimeUnit.MILLISECONDS.sleep(random.nextInt(MAX_TIME_ON_STOP));
+        } catch (InterruptedException e) {
+            logger.error("Arrive on BusStop problem", e);
         }
     }
 

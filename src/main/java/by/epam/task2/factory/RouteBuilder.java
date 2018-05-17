@@ -9,10 +9,14 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
 public class RouteBuilder implements RouteBuildable {
-    static Logger logger = LogManager.getLogger();
+    private static final String DIVIDER = "\\.\\s";
+    private static final String NUMBER = "\\d+?";
+    private static Logger logger = LogManager.getLogger();
     private BusStopBuildable busStopBuilder;
     private SourceParsable sourceParser;
 
@@ -31,21 +35,30 @@ public class RouteBuilder implements RouteBuildable {
     }
 
     @Override
-    public BusRoute createRoute(String dataSource) throws ExtendedException {
-        if (dataSource != null) {
-            ArrayList<String> routDataList = sourceParser.createRouteDataListFromList(dataSource);
-            logger.debug(routDataList + " Data for route");
-            BusRoute route = new BusRoute();
-            route.setBusStops(new ArrayDeque<>());
-            for (int i = 0; i < routDataList.size() - 1; i++) {
-                if (i != 0 && route.getBusStops() != null) {
-                    route.getBusStops().add(busStopBuilder.createBusStop(routDataList.get(i)));
-                } else {
-                    route.setRouteNumber(Integer.parseInt(routDataList.get(i)));
+    public ArrayList<BusRoute> createRoutes(ArrayList<String> routesData) throws ExtendedException {
+        if (routesData != null) {
+            logger.info(routesData + " Data for route");
+            ArrayList<BusRoute> busRoutes = new ArrayList<>();
+            for (String element : routesData
+                    ) {
+                String[] singleRouteData = element.split(DIVIDER);
+                List<String> cleanData = Arrays.asList(singleRouteData);
+                logger.info(cleanData);
+                BusRoute route = new BusRoute();
+                route.setBusStops(new ArrayDeque<>());
+                int busStopOrderId = 0;
+                for (String routeData : cleanData
+                        ) {
+                    if (!routeData.matches(NUMBER)) {
+                        route.getBusStops().add(busStopBuilder.createBusStop(routeData, ++busStopOrderId));
+                    } else {
+                        route.setRouteNumber(Integer.parseInt(routeData));
+                    }
                 }
+                busRoutes.add(route);
             }
-            logger.debug(route.toString());
-            return route;
+            logger.info(busRoutes.toString());
+            return busRoutes;
         } else {
             throw new ExtendedException(" Incorrect data");
         }

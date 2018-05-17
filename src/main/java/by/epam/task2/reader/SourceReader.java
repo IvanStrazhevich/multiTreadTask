@@ -16,16 +16,16 @@ public class SourceReader<T> implements SourceReadable<ArrayList<String>> {
     static Logger logger = LogManager.getLogger();
 
     public ArrayList<String> readSource(String dataSource) throws ExtendedException {
-        ArrayList<String> planeDataList = new ArrayList<>();
+        ArrayList<String> routeDataList = new ArrayList<>();
         if (dataSource != null) {
             Path path = Paths.get(dataSource);
             try (Stream<String> lines = Files.lines(path)) {
-                planeDataList = (ArrayList) lines.collect(Collectors.toList());
+                routeDataList = (ArrayList) lines.collect(Collectors.toList());
             } catch (IOException e) {
                 throw new ExtendedException(" Source file problem", e);
             }
-            logger.debug(planeDataList + " Source reader result");
-            return planeDataList;
+            logger.debug(routeDataList + " Source reader result");
+            return routeDataList;
         } else {
             throw new ExtendedException("Null data source");
         }

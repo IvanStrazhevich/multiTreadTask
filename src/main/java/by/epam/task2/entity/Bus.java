@@ -1,9 +1,11 @@
 package by.epam.task2.entity;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -12,10 +14,10 @@ public class Bus extends Thread {
     private static final int BUS_CAPACITY = 20;
     private BusRoute busRoute;
     private ArrayDeque<Passenger> passengerList = new ArrayDeque<>(20);
-    private boolean busOnStop;
     private final ReentrantLock lock = new ReentrantLock();
     private Condition passengerCanTakingOff = lock.newCondition();
     private Condition passengerCanBoarding = lock.newCondition();
+    private boolean busOnStop;
     private boolean busIsFull;
     private boolean takeOf;
     private boolean boarding;
@@ -29,43 +31,37 @@ public class Bus extends Thread {
         busRoute.moveOnRoute(Bus.this);
     }
 
-    public void boardOnBus(Passenger passenger) {
+    public void boardOnBus(ArrayList<Passenger> passengers) {
         lock.lock();
         try {
-            while (boarding) {
-                passengerCanTakingOff.await();
+            while (takeOf) {
+                passengerCanBoarding.await();
             }
-            takeOf = true;
+            boarding = true;
+            passengerList.addAll(passengers);
+            boarding = false;
             passengerCanTakingOff.signal();
-            if (passengerList.size() < BUS_CAPACITY) {
-                passengerList.add(passenger);
-            } else {
-                busIsFull = true;
-            }
-            takeOf = false;
-            passengerCanBoarding.signal();
-
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getCause());
+        } finally {
             lock.unlock();
         }
     }
 
-    public void takeOffBus(Passenger passenger) {
+    public void takeOffBus(ArrayList<Passenger> passengers) {
         lock.lock();
         try {
             while (boarding) {
                 passengerCanTakingOff.await();
             }
             takeOf = true;
-            passengerCanTakingOff.signal();
-            passengerList.remove(passenger);
+            passengerList.removeAll(passengers);
             busIsFull = false;
             takeOf = false;
             passengerCanBoarding.signal();
 
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getCause());
         } finally {
             lock.unlock();
         }
@@ -117,6 +113,10 @@ public class Bus extends Thread {
 
     public void setBoarding(boolean boarding) {
         this.boarding = boarding;
+    }
+
+    public static int getBusCapacity() {
+        return BUS_CAPACITY;
     }
 
     @Override

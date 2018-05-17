@@ -7,7 +7,7 @@ import org.apache.logging.log4j.Logger;
 
 
 public class BusStopBuilder implements BusStopBuildable {
-    static Logger logger = LogManager.getLogger();
+    private static Logger logger = LogManager.getLogger();
 
     private BusStopBuilder() {
     }
@@ -21,9 +21,9 @@ public class BusStopBuilder implements BusStopBuildable {
         return instance;
     }
 
-    public BusStop createBusStop(String dataSource) throws ExtendedException {
+    public BusStop createBusStop(String dataSource, int busStopOrderId) throws ExtendedException {
         if (dataSource != null) {
-            BusStop busStop = new BusStop(dataSource);
+            BusStop busStop = new BusStop(dataSource,busStopOrderId);
             logger.debug(busStop.toString());
             return busStop;
         } else {

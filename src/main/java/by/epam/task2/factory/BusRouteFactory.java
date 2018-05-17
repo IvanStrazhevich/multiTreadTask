@@ -2,13 +2,14 @@ package by.epam.task2.factory;
 
 import by.epam.task2.entity.BusRoute;
 import by.epam.task2.exception.ExtendedException;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 
 public class BusRouteFactory<T> implements RouteFactory<BusRoute> {
-    static Logger logger = LogManager.getLogger();
+    private static Logger logger = LogManager.getLogger();
     private static BusRouteFactory<BusRoute> instance;
 
     public static BusRouteFactory<BusRoute> getInstance() {
@@ -20,21 +21,14 @@ public class BusRouteFactory<T> implements RouteFactory<BusRoute> {
 
     @Override
     public ArrayList<BusRoute> createRoutes(ArrayList<String> routesList) {
-        ArrayList<BusRoute> busRouteList = new ArrayList<>();
-        RouteBuildable routeBuilder = RouteBuilder.getInstance();
-        for (String route : routesList
-                ) {
-            try {
-                BusRoute busRoute = (BusRoute) routeBuilder.createRoute(route);
-                if (route != null) {
-                    busRouteList.add(busRoute);
-                } else {
-                    logger.error(" Points does not build a plane");
-                }
-            } catch (ExtendedException e) {
-                logger.error(" Builder failed", e);
-            }
+
+        ArrayList<BusRoute> routes = new ArrayList<>();
+        try {
+            routes = RouteBuilder.getInstance().createRoutes(routesList);
+        } catch (ExtendedException e) {
+            logger.log(Level.ERROR, "WrongSource", e);
         }
-        return busRouteList;
+        logger.info(routes);
+        return routes;
     }
 }

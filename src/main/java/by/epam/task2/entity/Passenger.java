@@ -1,38 +1,47 @@
 package by.epam.task2.entity;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayDeque;
+import java.util.Iterator;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class Passenger extends Thread {
     private static Logger logger = LogManager.getLogger();
-    private static final int APROX_RIDING_TIME = 10000;
+    private static final int APPROX_RIDING_TIME = 7000;
+    private static final int MAX_DELAYS = 2;
     private BusRoute busRouteNeeded;
     private BusStop boardFrom;
     private BusStop takeOff;
     private boolean onRide;
+    private boolean boardFromSet;
+    private boolean takeOfSet;
 
     public Passenger(BusRoute busRouteNeeded) {
         this.busRouteNeeded = busRouteNeeded;
     }
 
-    public void distributeStopsToPassengers() {
-        for (BusStop busStop : busRouteNeeded.getBusStops()) {
+    private void distributeStopsToPassengers() {
+        ArrayDeque<BusStop> busStops = busRouteNeeded.getBusStops();
+        for (Iterator<BusStop> iterator = busStops.iterator(); iterator.hasNext() && !boardFromSet; ) {
+            BusStop busStop = iterator.next();
             if (new Random().nextBoolean()) {
                 this.boardFrom = busStop;
-                break;
+                boardFromSet = true;
             } else {
-                this.boardFrom = busRouteNeeded.getBusStops().peekFirst();
+                this.boardFrom = busStops.peekFirst();
             }
         }
-        for (BusStop busStop : busRouteNeeded.getBusStops()) {
+        for (Iterator<BusStop> iterator = busStops.iterator(); iterator.hasNext() && !takeOfSet; ) {
+            BusStop busStop = iterator.next();
             if (new Random().nextBoolean()) {
                 this.takeOff = busStop;
-                break;
+                takeOfSet = true;
             } else {
-                this.takeOff = busRouteNeeded.getBusStops().peekLast();
+                this.takeOff = busStops.peekLast();
             }
         }
         if (takeOff.getBusStopOrderedId() < boardFrom.getBusStopOrderedId()) {
@@ -48,22 +57,26 @@ public class Passenger extends Thread {
 
     @Override
     public void run() {
+        distributeStopsToPassengers();
         busRouteNeeded.passengerToStartStop(Passenger.this);
         if (takeOff != boardFrom) {
             onRide = true;
         }
-        logger.info("passenger " + this.getName());
         logger.info("passenger " + this.getName()
                 + " is on stop " + this.getBoardFrom().getName()
                 + " goes to " + this.getTakeOff().getName());
-        while (onRide) {
+        int missTheBus = 0;
+        while (onRide && missTheBus < MAX_DELAYS) {
             try {
-                TimeUnit.MILLISECONDS.sleep(APROX_RIDING_TIME);
+                TimeUnit.MILLISECONDS.sleep(APPROX_RIDING_TIME);
+                logger.info("passenger " + this.getName() + " has latency of ride "
+                        + missTheBus++ * TimeUnit.SECONDS.convert(APPROX_RIDING_TIME, TimeUnit.MILLISECONDS) + " seconds");
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.log(Level.ERROR, e.getCause());
             }
-            logger.info("is on destination point " + this.getName());
         }
+        logger.info(missTheBus < MAX_DELAYS ? "is on destination point " + this.getName()
+                : "passenger " + this.getName() + " is missed the bus");
     }
 
     public BusRoute getBusRouteNeeded() {
